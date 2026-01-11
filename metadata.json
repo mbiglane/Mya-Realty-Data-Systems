@@ -1,0 +1,8 @@
+{
+  "name": "Mya Realty Data Systems",
+  "description": "Beta release of Mya Realty Data Systems - AI Real Estate Platform.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

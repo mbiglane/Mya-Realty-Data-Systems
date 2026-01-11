@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mya Realty Data Systems</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'brand-primary': 'rgb(var(--color-brand-primary) / <alpha-value>)',
+              'brand-secondary': 'rgb(var(--color-brand-secondary) / <alpha-value>)',
+              'status-green': '#22c55e',
+              'status-yellow': '#eab308',
+              'status-red': '#ef4444',
+              'base-100': '#020617', // slate-950
+              'base-200': '#0f172a', // slate-900
+              'base-300': '#1e293b', // slate-800
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-in-up': 'slideInUp 0.5s ease-in-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideInUp: {
+                '0%': { transform: 'translateY(100%)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      :root {
+        /* Default Teal-400 */
+        --color-brand-primary: 45 212 191; 
+        /* Default Blue-400 */
+        --color-brand-secondary: 96 165 250;
+      }
+      .pie-secondary-cell {
+        fill: #e2e8f0; /* slate-200 */
+      }
+      .dark .pie-secondary-cell {
+        fill: rgba(255, 255, 255, 0.1);
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+      #root {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.552.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^0.14.0"
+  }
+}
+</script>
+</head>
+  <body class="antialiased h-full">
+    <div id="root" class="h-full"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
