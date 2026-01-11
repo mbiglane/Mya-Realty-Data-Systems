@@ -21,12 +21,13 @@ import { TechnicalManual } from './components/TechnicalManual';
 import { UserManual } from './components/UserManual';
 import { BetaAdmin } from './components/BetaAdmin';
 import { TechnicalHealth } from './components/TechnicalHealth';
+import { Roadmap } from './components/Roadmap';
 
 import { 
   ShieldCheck, Zap, BarChart2, CheckCircle, Activity, Rocket, 
   ClipboardList, Fingerprint, Phone, ClipboardCheck, Sparkles, 
   Film, LayoutDashboard, BookOpen, Beaker, Video, Users, 
-  LineChart, Settings, HardDrive, HelpCircle
+  LineChart, Settings, HardDrive, HelpCircle, Map as RoadmapIcon
 } from 'lucide-react';
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -88,6 +89,25 @@ const App: React.FC = () => {
     });
     
     const config = DEFAULT_CONFIG;
+
+    // Handle Magic Links / Auto-Login via URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const access = params.get('access');
+        const code = params.get('code');
+
+        // If magic link detected (e.g., ?access=admin&code=BETA1.0)
+        if (access && code?.toUpperCase() === 'BETA1.0') {
+            const targetEmail = access === 'admin' ? 'admin@platform.ai' : 'tester@platform.ai';
+            const targetUser = allUsers.find(u => u.email === targetEmail);
+            
+            if (targetUser) {
+                handleAuthAttempt(targetUser.email, targetUser.name);
+                // Clean up URL after successful detection
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -158,6 +178,7 @@ const App: React.FC = () => {
         { id: 'Marketing Studio', icon: Video, label: 'Studio' },
         { id: 'Collaboration Room', icon: Users, label: 'Neural Hub' },
         { id: 'Business ROI', icon: LineChart, label: 'Business' },
+        { id: 'Roadmap', icon: RoadmapIcon, label: 'Horizon' },
         { id: 'User Manual', icon: HelpCircle, label: 'Support' }
     ];
 
@@ -293,6 +314,7 @@ const App: React.FC = () => {
                         {activeTab === 'User Manual' && <UserManual />}
                         {activeTab === 'Technical Health' && <TechnicalHealth />}
                         {activeTab === 'System Manual' && <TechnicalManual />}
+                        {activeTab === 'Roadmap' && <Roadmap />}
                         {activeTab === 'Beta Admin' && (
                             <BetaAdmin 
                                 config={betaConfig} 

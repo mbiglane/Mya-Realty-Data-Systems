@@ -5,7 +5,7 @@ import {
     Shield, Activity, MessageSquare, AlertCircle, CheckCircle, Sliders, 
     Play, Pause, Terminal, Database, Lock, Cpu, BarChart3, 
     CloudLightning, Zap, Radio, Globe, RefreshCw, Layers, 
-    HardDrive, HardDriveDownload, Power, Users, Send, Bell
+    HardDrive, HardDriveDownload, Power, Users, Send, Bell, Link as LinkIcon, Copy
 } from 'lucide-react';
 import { SectionCard } from './SectionCard';
 import { Input } from './ui/Input';
@@ -95,6 +95,14 @@ export const BetaAdmin: React.FC<BetaAdminProps> = ({ config, onConfigChange, us
         alert("Broadcast dispatched to all active beta terminals.");
     };
 
+    const copyMagicLink = (role: 'admin' | 'tester') => {
+        const url = new URL(window.location.origin);
+        url.searchParams.set('access', role);
+        url.searchParams.set('code', 'BETA1.0');
+        navigator.clipboard.writeText(url.toString());
+        alert(`Magic Link for ${role.toUpperCase()} copied to clipboard!`);
+    };
+
     return (
         <div className="space-y-8 animate-fade-in pb-20 max-w-7xl mx-auto">
             {/* Header HUD */}
@@ -145,6 +153,39 @@ export const BetaAdmin: React.FC<BetaAdminProps> = ({ config, onConfigChange, us
                             <p className="text-xl font-black text-white">{s.value}</p>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            {/* Magic Link Generator - NEW SECTION */}
+            <div className="bg-brand-primary/5 p-8 rounded-[2.5rem] border border-brand-primary/20 shadow-xl animate-fade-in">
+                <div className="flex items-center gap-3 mb-6">
+                    <LinkIcon className="text-brand-primary" size={24} />
+                    <div>
+                        <h3 className="text-lg font-black text-white uppercase tracking-tight">Magic Access Hub</h3>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">Send these links to testers for instant, password-less entry.</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button 
+                        onClick={() => copyMagicLink('tester')}
+                        className="flex items-center justify-between p-6 bg-slate-900 border border-white/5 rounded-[1.8rem] hover:border-brand-primary transition-all group"
+                    >
+                        <div className="text-left">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Standard Beta Invite</p>
+                            <p className="text-white font-bold">tester_access_link</p>
+                        </div>
+                        <Copy className="text-slate-700 group-hover:text-brand-primary transition-colors" size={20} />
+                    </button>
+                    <button 
+                        onClick={() => copyMagicLink('admin')}
+                        className="flex items-center justify-between p-6 bg-slate-900 border border-white/5 rounded-[1.8rem] hover:border-brand-secondary transition-all group"
+                    >
+                        <div className="text-left">
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Full Admin Invite</p>
+                            <p className="text-white font-bold">admin_access_link</p>
+                        </div>
+                        <Copy className="text-slate-700 group-hover:text-brand-secondary transition-colors" size={20} />
+                    </button>
                 </div>
             </div>
 
