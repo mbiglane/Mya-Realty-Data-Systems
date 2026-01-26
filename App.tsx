@@ -63,7 +63,6 @@ const INITIAL_USERS: User[] = [
 ];
 
 const STORAGE_KEY_USER = 'ai_platform_user_v3';
-const STORAGE_KEY_DB = 'ai_platform_users_db_v3';
 
 const hexToRgbString = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -82,6 +81,7 @@ const App: React.FC = () => {
     const [betaConfig, setBetaConfig] = useState<BetaConfig>(DEFAULT_BETA_CONFIG);
     const [isSecurityChecking, setIsSecurityChecking] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isZenMode, setIsZenMode] = useState(false);
     
     const [tourState, setTourState] = useState<TourState>({
         isActive: false,
@@ -90,20 +90,17 @@ const App: React.FC = () => {
     
     const config = DEFAULT_CONFIG;
 
-    // Handle Magic Links / Auto-Login via URL
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const access = params.get('access');
         const code = params.get('code');
 
-        // If magic link detected (e.g., ?access=admin&code=BETA1.0)
         if (access && code?.toUpperCase() === 'BETA1.0') {
             const targetEmail = access === 'admin' ? 'admin@platform.ai' : 'tester@platform.ai';
             const targetUser = allUsers.find(u => u.email === targetEmail);
             
             if (targetUser) {
                 handleAuthAttempt(targetUser.email, targetUser.name);
-                // Clean up URL after successful detection
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -129,20 +126,39 @@ const App: React.FC = () => {
     }, [config]);
 
     const handleAuthAttempt = (email: string, name: string) => {
-        const existingUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-        if (existingUser) {
-            setIsSecurityChecking(true);
-            setTimeout(() => {
-                setIsSecurityChecking(false);
-                setUser(existingUser);
-                localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(existingUser));
-            }, 1000);
-            return { success: true, user: existingUser };
-        }
-        return { success: false, message: 'Unauthorized entry.' };
+        const normalizedEmail = email.toLowerCase().trim();
+        const existingUser = allUsers.find(u => u.email.toLowerCase() === normalizedEmail);
+        
+        setIsSecurityChecking(true);
+        
+        setTimeout(() => {
+            setIsSecurityChecking(false);
+            
+            let authenticatedUser: User;
+            
+            if (existingUser) {
+                authenticatedUser = existingUser;
+            } else {
+                authenticatedUser = {
+                    id: `beta-user-${Date.now()}`,
+                    name: name.trim() || 'Anonymous Tester',
+                    email: normalizedEmail,
+                    role: 'user',
+                    status: 'active',
+                    joinedAt: new Date().toISOString()
+                };
+                setAllUsers(prev => [...prev, authenticatedUser]);
+            }
+            
+            setUser(authenticatedUser);
+            localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(authenticatedUser));
+        }, 1000);
+
+        return { success: true };
     };
 
     const handleLogout = () => {
+        setIsAiAssistantOpen(false);
         setUser(null);
         setActiveTab('Overview');
         localStorage.removeItem(STORAGE_KEY_USER);
@@ -198,7 +214,7 @@ const App: React.FC = () => {
 
     if (!user) return <LoginScreen onAuthAttempt={handleAuthAttempt} />;
 
-    const NavButton = ({ item }: { item: any }) => (
+    const NavButton = ({ item }: { item: any; key?: React.Key }) => (
         <button
             onClick={() => setActiveTab(item.id as Tab)}
             className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${activeTab === item.id ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
@@ -209,68 +225,67 @@ const App: React.FC = () => {
     );
 
     return (
-        <div className="flex h-screen bg-slate-950 text-gray-200 font-sans overflow-hidden">
-            {/* Sidebar */}
-            <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-slate-900 border-r border-white/5 flex flex-col transition-all duration-500 z-50`}>
-                <div className="p-6 flex items-center justify-center border-b border-white/5">
-                    <div className="bg-brand-primary h-10 w-10 rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20">
-                        <Sparkles className="text-white" size={24} />
-                    </div>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 scrollbar-hide">
-                    {sidebarItems.map(item => <NavButton key={item.id} item={item} />)}
-                    
-                    {user?.role === 'admin' && (
-                        <div className="pt-6 mt-6 border-t border-white/5 space-y-2">
-                            {isSidebarOpen && <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Internal Telemetry</p>}
-                            {adminItems.map(item => <NavButton key={item.id} item={item} />)}
+        <div className={`flex h-screen bg-slate-950 text-gray-200 font-sans overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
+            {/* Sidebar with Zen Mode visibility check */}
+            {!isZenMode && (
+                <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-slate-900 border-r border-white/5 flex flex-col transition-all duration-500 z-50`}>
+                    <div className="p-6 flex items-center justify-center border-b border-white/5">
+                        <div className="bg-brand-primary h-10 w-10 rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20">
+                            <Sparkles className="text-white" size={24} />
                         </div>
-                    )}
-                </div>
-
-                <div className="p-4 border-t border-white/5">
-                    <button 
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                    >
-                        <Settings size={20} />
-                        {isSidebarOpen && <span className="font-bold text-sm uppercase tracking-wider">Log Out</span>}
-                    </button>
-                </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-slate-950 relative">
-                <header className="h-20 bg-slate-900/50 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 shrink-0 z-40">
-                    <div className="flex items-center gap-6">
-                        <button 
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="text-slate-500 hover:text-white transition-colors"
-                        >
-                            <LayoutDashboard size={24} />
-                        </button>
-                        <h2 className="text-xl font-black text-white uppercase tracking-tighter italic">
-                            {activeTab}
-                        </h2>
                     </div>
                     
-                    <div className="flex items-center gap-6">
-                        <div className="hidden md:flex items-center gap-4 bg-black/40 px-4 py-2 rounded-2xl border border-white/5">
-                            <Activity className="text-brand-primary animate-pulse" size={16} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Node_Stable</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <img src={MYA_AVATAR_B64} className="h-10 w-10 rounded-xl border border-white/10" alt="Admin" />
-                            <div className="hidden lg:block text-left">
-                                <p className="text-xs font-black uppercase text-white tracking-tight">{user.name}</p>
-                                <p className="text-[10px] text-brand-primary font-bold uppercase">{user.role}</p>
+                    <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2 scrollbar-hide">
+                        {sidebarItems.map(item => <NavButton key={item.id} item={item} />)}
+                        
+                        {user?.role === 'admin' && (
+                            <div className="pt-6 mt-6 border-t border-white/5 space-y-2">
+                                {isSidebarOpen && <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Internal Telemetry</p>}
+                                {adminItems.map(item => <NavButton key={item.id} item={item} />)}
                             </div>
-                        </div>
+                        )}
                     </div>
-                </header>
 
-                <main className="flex-1 overflow-y-auto p-8 relative scroll-smooth custom-scrollbar">
+                    <div className="p-4 border-t border-white/5">
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                        >
+                            <Settings size={20} />
+                            {isSidebarOpen && <span className="font-bold text-sm uppercase tracking-wider">Log Out</span>}
+                        </button>
+                    </div>
+                </aside>
+            )}
+
+            <div className="flex-1 flex flex-col min-w-0 bg-slate-950 relative">
+                {/* Global Header Integration */}
+                {!isZenMode && (
+                    <Header 
+                        title={activeTab}
+                        isDarkMode={isDarkMode}
+                        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+                        user={user}
+                        onLogout={handleLogout}
+                        onStartTour={startTour}
+                        isSidebarOpen={isSidebarOpen}
+                        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                        onToggleZen={() => setIsZenMode(true)}
+                    />
+                )}
+
+                {/* Zen Mode Escape Button */}
+                {isZenMode && (
+                    <button 
+                        onClick={() => setIsZenMode(false)}
+                        className="fixed top-6 right-6 z-[100] bg-brand-primary/20 backdrop-blur-md text-brand-primary p-4 rounded-2xl border border-brand-primary/40 hover:bg-brand-primary hover:text-white transition-all shadow-2xl"
+                        title="Exit Zen Mode"
+                    >
+                        <LayoutDashboard size={24} />
+                    </button>
+                )}
+
+                <main className={`flex-1 overflow-y-auto p-8 relative scroll-smooth custom-scrollbar transition-all duration-500 ${isZenMode ? 'p-12' : ''}`}>
                     <div className="max-w-7xl mx-auto w-full">
                         {activeTab === 'Overview' && (
                             <div className="space-y-12 animate-fade-in">
@@ -288,8 +303,8 @@ const App: React.FC = () => {
                                             <SectionCard title="Neural Scrape Protocol" icon={ClipboardList}>
                                                 <div className="space-y-4">
                                                     <div className="p-4 bg-slate-900 rounded-2xl border border-white/5">
-                                                        <h4 className="text-[10px] font-black text-brand-primary uppercase mb-2">Hybrid Verification</h4>
-                                                        <p className="text-xs text-slate-400">Grounding engine successfully cross-referencing Zillow with live scraper nodes.</p>
+                                                        <h4 className="text-[10px] font-black text-brand-primary uppercase mb-2">In-House Verification</h4>
+                                                        <p className="text-xs text-slate-400">Grounding engine successfully cross-referencing in-house asset nodes with live scraper nodes.</p>
                                                     </div>
                                                     <div className="p-4 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
                                                         <h4 className="text-[10px] font-black text-brand-primary uppercase mb-2">Active Persona</h4>
@@ -326,7 +341,6 @@ const App: React.FC = () => {
                     </div>
                 </main>
 
-                {/* Immersive AI FAB */}
                 <button 
                     onClick={() => setIsAiAssistantOpen(true)}
                     className="fixed bottom-12 right-12 group z-[60]"

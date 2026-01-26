@@ -12,12 +12,12 @@ export const reportData: ReportData = {
             { name: 'Multimodal Inference Engine', status: Status.Operational, details: 'Gemini 3.0 Flash Cluster' },
             { name: 'Core Data Systems', status: Status.Operational, details: 'Distributed Edge Database' },
             { name: 'Proprietary Knowledge Shield', status: Status.Operational, details: 'Isolated Context Layer' },
-            { name: 'RapidAPI Gateway (Zillow)', status: Status.Operational, details: 'Active Sub-market Fetching' },
+            { name: 'Proprietary Data Mesh', status: Status.Operational, details: 'Active Sub-market Fetching' },
             { name: 'WebSocket Audio Gateway', status: Status.Operational, details: '24kHz Stream Protocol' },
         ],
         issues: [
             { name: 'iOS Background Audio', status: Status.Warning, details: 'Session may drop if device locks.' },
-            { name: 'RapidAPI Rate Limit', status: Status.NeedsAttention, details: 'Approaching 80% of monthly tier.' },
+            { name: 'Internal Node Capacity', status: Status.NeedsAttention, details: 'Approaching 80% of current node tier.' },
         ],
     },
   techArchitecture: {
@@ -134,7 +134,7 @@ export const reportData: ReportData = {
         phase3: ['International Market Expansion', 'Blockchain-based Ledger Integration', 'Advanced AR Property Visualizer'],
     },
     maintenance: [
-        { period: 'Real-time', tasks: ['Active DDoS Mitigation', 'API Quota Monitoring'] },
+        { period: 'Real-time', tasks: ['Active DDoS Mitigation', 'Internal Node Monitoring'] },
         { period: 'Daily', tasks: ['Database Integrity Checks', 'Log Analysis'] },
         { period: 'Weekly', tasks: ['UI/UX Polishing', 'Dependency Updates'] },
     ],

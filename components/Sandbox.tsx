@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
-import { Beaker, Lightbulb, TrendingUp, Users, ArrowLeft, Lock, Target, ChevronRight, Shield } from 'lucide-react';
+import { Beaker, Lightbulb, TrendingUp, Users, ArrowLeft, Lock, Target, ChevronRight, Shield, Camera } from 'lucide-react';
 import { ValuationChallenge } from './scenarios/ValuationChallenge';
 import { NegotiationSim } from './scenarios/NegotiationSim';
 import { MarketAnalysis } from './scenarios/MarketAnalysis';
+import { VisionAudit } from './scenarios/VisionAudit';
 import { ScenarioContainer } from './scenarios/ScenarioContainer';
 import { BetaConfig } from '../types';
 
-type Scenario = 'valuation' | 'negotiation' | 'analysis' | null;
+type Scenario = 'valuation' | 'negotiation' | 'analysis' | 'vision' | null;
 
 interface SandboxProps {
     isDarkMode: boolean;
@@ -15,6 +16,15 @@ interface SandboxProps {
 }
 
 const scenarioDetails = [
+    {
+        id: 'vision' as Scenario,
+        icon: Camera,
+        title: "Vision Audit",
+        tagline: "Staging & Repair Analysis",
+        description: "Upload a property photo. Mya will identify structural/cosmetic issues, estimate repair costs, and generate a virtually staged version.",
+        featureKey: 'visionAudit' as keyof BetaConfig['features'],
+        difficulty: 'Advanced'
+    },
     {
         id: 'valuation' as Scenario,
         icon: TrendingUp,
@@ -32,16 +42,7 @@ const scenarioDetails = [
         description: "Practice negotiation skills. MYA will role-play a buyer with specific objections. Your goal is to reach a deal.",
         featureKey: 'negotiationSim' as keyof BetaConfig['features'],
         difficulty: 'Intermediate'
-    },
-    {
-        id: 'analysis' as Scenario,
-        icon: Lightbulb,
-        title: "Market Insight",
-        tagline: "Demographic Trend Analysis",
-        description: "Identify opportunities in a target market. Ask MYA to interpret demographic data and predict future growth areas.",
-        featureKey: 'marketAnalysis' as keyof BetaConfig['features'],
-        difficulty: 'Standard'
-    },
+    }
 ]
 
 export const Sandbox: React.FC<SandboxProps> = ({ isDarkMode, config }) => {
@@ -49,6 +50,12 @@ export const Sandbox: React.FC<SandboxProps> = ({ isDarkMode, config }) => {
 
     const renderScenario = () => {
         switch (activeScenario) {
+            case 'vision':
+                return (
+                    <ScenarioContainer title="Multimodal Vision Staging Audit" onExit={() => setActiveScenario(null)}>
+                        <VisionAudit />
+                    </ScenarioContainer>
+                );
             case 'valuation':
                 return (
                     <ScenarioContainer title="Property Valuation Simulation" onExit={() => setActiveScenario(null)}>

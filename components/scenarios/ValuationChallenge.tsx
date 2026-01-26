@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleGenAI, Type } from '@google/genai';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { Loader } from '../ui/Loader';
-import { DollarSign, CheckCircle, BarChart, XCircle, Info, Target, TrendingUp } from 'lucide-react';
+import { DollarSign, CheckCircle, BarChart, XCircle, Info, Target, TrendingUp, Loader2 } from 'lucide-react';
 
 interface ValuationResult {
     noi: number;
@@ -22,8 +22,26 @@ export const ValuationChallenge: React.FC = () => {
     const [income, setIncome] = useState('');
     const [expenses, setExpenses] = useState('');
     const [loading, setLoading] = useState(false);
+    const [thinkingProgress, setThinkingProgress] = useState(0);
     const [result, setResult] = useState<ValuationResult | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let interval: any;
+        if (loading) {
+            setThinkingProgress(0);
+            interval = setInterval(() => {
+                setThinkingProgress(prev => {
+                    if (prev >= 98) return 98;
+                    return prev + (prev < 60 ? 10 : 2);
+                });
+            }, 300);
+        } else {
+            setThinkingProgress(0);
+            if (interval) clearInterval(interval);
+        }
+        return () => clearInterval(interval);
+    }, [loading]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,12 +65,12 @@ export const ValuationChallenge: React.FC = () => {
             - Self-Reported Operating Expenses: $${expenses}
 
             Detailed Tasks:
-            1. Calculate NOI (Net Operating Income).
-            2. Estimate a market-appropriate Cap Rate for the specific sub-market implied by the address.
-            3. Synthesize 3 realistic Comparable Sales (Comps) including calculated Cap Rates for those sales.
-            4. Provide a professional 'Appraisal Summary' analyzing the investment viability.
+            1. Calculate NOI.
+            2. Estimate a market-appropriate Cap Rate.
+            3. Synthesize 3 realistic Comparable Sales.
+            4. Provide a professional 'Appraisal Summary'.
 
-            YOU MUST RETURN A VALID JSON OBJECT ONLY.
+            RETURN VALID JSON OBJECT ONLY.
         `;
         
         try {
@@ -65,8 +83,8 @@ export const ValuationChallenge: React.FC = () => {
                   responseSchema: {
                      type: Type.OBJECT,
                      properties: {
-                       noi: { type: Type.NUMBER, description: "Net Operating Income" },
-                       capRate: { type: Type.NUMBER, description: "The estimated capitalization rate as a decimal (e.g. 0.055)" },
+                       noi: { type: Type.NUMBER },
+                       capRate: { type: Type.NUMBER },
                        comps: {
                          type: Type.ARRAY,
                          items: {
@@ -79,7 +97,7 @@ export const ValuationChallenge: React.FC = () => {
                            required: ["address", "salePrice", "noi"]
                          }
                        },
-                       analysis: { type: Type.STRING, description: "Professional analytical summary" },
+                       analysis: { type: Type.STRING },
                      },
                      required: ["noi", "capRate", "comps", "analysis"]
                    },
@@ -91,9 +109,10 @@ export const ValuationChallenge: React.FC = () => {
 
         } catch (err) {
             console.error(err);
-            setError("Technical fault in the AI Inference layer. Please verify input data and retry.");
+            setError("Technical fault in the AI Inference layer.");
         } finally {
             setLoading(false);
+            setThinkingProgress(100);
         }
     };
 
@@ -107,11 +126,16 @@ export const ValuationChallenge: React.FC = () => {
             <div className="flex items-start gap-4 bg-brand-primary/10 border-l-4 border-brand-primary p-4 rounded-r-lg shadow-sm">
                 <Info className="h-5 w-5 text-brand-primary mt-1 shrink-0" />
                 <p className="text-sm text-slate-700 dark:text-gray-300 leading-relaxed">
-                    <strong>Analytical Protocol:</strong> Provide the subject property financial profile. Mya will cross-reference regional sub-market data to derive an estimated asset valuation and risk profile.
+                    <strong>Analytical Protocol:</strong> Provide financial profile. Mya will cross-reference regional data to derive valuation and risk profile.
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 border border-slate-200 dark:border-base-300 rounded-xl bg-white dark:bg-base-300/10 shadow-lg space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 border border-slate-200 dark:border-base-300 rounded-xl bg-white dark:bg-base-300/10 shadow-lg space-y-6 relative overflow-hidden">
+                {loading && (
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-white/5">
+                        <div className="h-full bg-brand-primary transition-all duration-300" style={{ width: `${thinkingProgress}%` }}></div>
+                    </div>
+                )}
                 <div className="grid grid-cols-1 gap-6">
                     <Input
                         id="address"
@@ -145,10 +169,18 @@ export const ValuationChallenge: React.FC = () => {
                         />
                     </div>
                 </div>
-                <div className="flex justify-end pt-2">
-                    <Button type="submit" disabled={loading} className="px-8 py-3 rounded-lg shadow-brand-primary/20 shadow-lg">
-                        {loading ? <><Loader /> Running Simulation...</> : "Initialize Appraisal"}
-                    </Button>
+                <div className="flex justify-between items-center pt-2">
+                    {loading && (
+                        <div className="flex items-center gap-3 text-brand-primary animate-pulse">
+                            <Loader2 className="animate-spin" size={16} />
+                            <span className="text-xs font-black uppercase tracking-widest">Inference Engine: {thinkingProgress}%</span>
+                        </div>
+                    )}
+                    <div className="ml-auto">
+                        <Button type="submit" disabled={loading} className="px-8 py-3 rounded-lg shadow-brand-primary/20 shadow-lg">
+                            {loading ? "Thinking..." : "Initialize Appraisal"}
+                        </Button>
+                    </div>
                 </div>
             </form>
             
@@ -178,7 +210,7 @@ export const ValuationChallenge: React.FC = () => {
                     <div className="bg-white dark:bg-base-300/20 p-6 rounded-xl border border-slate-200 dark:border-base-300 shadow-sm">
                         <div className="flex items-center gap-2 mb-4">
                             <Target className="text-brand-primary h-5 w-5" />
-                            <h4 className="font-bold text-slate-800 dark:text-gray-100">Professional Analysis Summary</h4>
+                            <h4 className="font-bold text-slate-800 dark:text-gray-100">Professional Analysis</h4>
                         </div>
                         <p className="text-sm text-slate-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{result.analysis}</p>
                     </div>
@@ -186,20 +218,15 @@ export const ValuationChallenge: React.FC = () => {
                      <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <TrendingUp className="text-brand-secondary h-5 w-5" />
-                            <h4 className="font-bold text-slate-800 dark:text-gray-100">Comparable Market Set</h4>
+                            <h4 className="font-bold text-slate-800 dark:text-gray-100">Market Comps</h4>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
                            {result.comps.map((comp, index) => (
                                <div key={index} className="group p-4 bg-slate-50 dark:bg-base-200/50 hover:bg-white dark:hover:bg-base-200 rounded-xl border border-slate-100 dark:border-base-300/50 transition-all flex flex-col sm:flex-row justify-between sm:items-center gap-2 shadow-sm">
                                    <div>
                                         <p className="font-bold text-slate-800 dark:text-gray-100 group-hover:text-brand-primary transition-colors">{comp.address}</p>
-                                        <p className="text-xs text-slate-500">Sub-market Data Point #{index + 1}</p>
                                    </div>
                                    <div className="flex items-center gap-4 sm:text-right">
-                                       <div className="hidden sm:block">
-                                            <p className="text-[10px] uppercase text-slate-400 font-bold">NOI</p>
-                                            <p className="text-sm font-medium text-slate-700 dark:text-gray-300">${comp.noi.toLocaleString()}</p>
-                                       </div>
                                        <div>
                                             <p className="text-[10px] uppercase text-slate-400 font-bold">Final Sale</p>
                                             <p className="text-lg font-black text-brand-secondary">${comp.salePrice.toLocaleString()}</p>

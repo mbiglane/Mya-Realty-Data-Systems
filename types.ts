@@ -120,6 +120,16 @@ export interface BetaConfig {
     safetyLevel: 'strict' | 'standard' | 'relaxed';
 }
 
+export interface VisionAuditResult {
+    analysis: string;
+    repairs: {
+        item: string;
+        severity: 'low' | 'medium' | 'high';
+        estimatedCost: string;
+    }[];
+    suggestedStyle: string;
+}
+
 export interface ReportData {
     executiveSummary: {
         status: Status;

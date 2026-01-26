@@ -9,7 +9,7 @@ const ROADMAP_DATA = [
         color: "brand-primary",
         items: [
             { title: "Mya Intelligence Engine", desc: "Core voice and multi-modal integration using Gemini 2.5/3.", status: "complete" },
-            { title: "Proprietary Scraper Hub", desc: "Live property triangulation between Zillow and raw HTML metadata.", status: "complete" },
+            { title: "Proprietary Scraper Hub", desc: "Live property triangulation between distributed listing nodes and raw HTML metadata.", status: "complete" },
             { title: "SaaS Dashboard Framework", desc: "High-performance Titan interface with secure auth gateway.", status: "complete" }
         ]
     },
@@ -20,7 +20,7 @@ const ROADMAP_DATA = [
         items: [
             { title: "RAG Knowledge Base", desc: "Ability to upload and query entire company SOPs and local laws.", status: "in-progress" },
             { title: "Automated Valuation Agents", desc: "Autonomous bots that generate 100-page investment reports overnight.", status: "queued" },
-            { title: "CRM Multi-Agent Sync", desc: "Mya integration for Salesforce and FollowUpBoss.", status: "queued" }
+            { title: "CRM Multi-Agent Sync", desc: "Mya integration for external CRM systems and productivity suites.", status: "queued" }
         ]
     },
     {

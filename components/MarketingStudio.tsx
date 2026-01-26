@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { GoogleGenAI } from '@google/genai';
-// Fixed: Added missing CheckCircle to the lucide-react import list
-import { Video, Image as ImageIcon, Wand2, Sparkles, Film, Loader2, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import { Video, Image as ImageIcon, Wand2, Sparkles, Film, Loader2, Download, AlertCircle, CheckCircle, Sliders } from 'lucide-react';
 import { Button } from './ui/Button';
 
 export const MarketingStudio: React.FC = () => {
@@ -11,18 +10,31 @@ export const MarketingStudio: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'video' | 'image'>('video');
     const [outputUrl, setOutputUrl] = useState<string | null>(null);
     const [statusMsg, setStatusMsg] = useState('');
+    const [resolution, setResolution] = useState<'1K' | '2K' | '4K'>('1K');
 
     const generateImage = async () => {
         setIsGenerating(true);
-        setStatusMsg('Rendering professional property visual...');
+        setStatusMsg('Initializing Gemini 3 Pro Vision Engine...');
         try {
+            // Fix: Implementing mandatory API key selection check for gemini-3-pro models
+            if (!await window.aistudio.hasSelectedApiKey()) {
+                await window.aistudio.openSelectKey();
+            }
+            
+            // Fix: Creating fresh client right before call to capture updated key from dialog
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
-                contents: { parts: [{ text: `A high-end professional real estate photograph of: ${prompt}. Cinematic lighting, 8k resolution, modern staging.` }] },
-                config: { imageConfig: { aspectRatio: "16:9" } },
+                model: 'gemini-3-pro-image-preview',
+                contents: { parts: [{ text: `A high-end professional real estate photograph of: ${prompt}. Cinematic lighting, architectural photography style, luxury modern staging, photorealistic textures.` }] },
+                config: { 
+                    imageConfig: { 
+                        aspectRatio: "16:9",
+                        imageSize: resolution
+                    } 
+                },
             });
 
+            // Fix: Properly iterating through parts to find the image as per SDK guidelines
             for (const part of response.candidates?.[0].content.parts || []) {
                 if (part.inlineData) {
                     setOutputUrl(`data:image/png;base64,${part.inlineData.data}`);
@@ -31,7 +43,7 @@ export const MarketingStudio: React.FC = () => {
             }
         } catch (e) {
             console.error(e);
-            setStatusMsg('Inference failed. Verify parameters.');
+            setStatusMsg('Pro Inference failed. Check neural quotas.');
         } finally {
             setIsGenerating(false);
         }
@@ -41,10 +53,13 @@ export const MarketingStudio: React.FC = () => {
         setIsGenerating(true);
         setStatusMsg('Initializing Veo 3.1 Cinema Engine...');
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            // Fix: Mandatory API key selection for Veo video generation
             if (!await window.aistudio.hasSelectedApiKey()) {
                 await window.aistudio.openSelectKey();
             }
+            
+            // Fix: Instantiate right before call to ensure newest environment key is used
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
             let operation = await ai.models.generateVideos({
                 model: 'veo-3.1-fast-generate-preview',
@@ -59,6 +74,7 @@ export const MarketingStudio: React.FC = () => {
             }
 
             const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+            // Fix: Appending API key to download link fetch as required by SDK guidelines
             const res = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
             const blob = await res.blob();
             setOutputUrl(URL.createObjectURL(blob));
@@ -82,19 +98,38 @@ export const MarketingStudio: React.FC = () => {
                 </div>
             </div>
 
-            <div className="flex gap-4 mb-8 bg-slate-50 dark:bg-base-300/30 p-2 rounded-2xl w-fit">
-                <button 
-                    onClick={() => { setActiveTab('video'); setOutputUrl(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'video' ? 'bg-white dark:bg-base-200 shadow-lg text-brand-primary' : 'text-slate-400'}`}
-                >
-                    <Video size={18}/> Drone Sizzle Reel
-                </button>
-                <button 
-                    onClick={() => { setActiveTab('image'); setOutputUrl(null); }}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'image' ? 'bg-white dark:bg-base-200 shadow-lg text-brand-primary' : 'text-slate-400'}`}
-                >
-                    <ImageIcon size={18}/> Virtual Staging
-                </button>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+                <div className="flex gap-4 bg-slate-50 dark:bg-base-300/30 p-2 rounded-2xl w-fit">
+                    <button 
+                        onClick={() => { setActiveTab('video'); setOutputUrl(null); }}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'video' ? 'bg-white dark:bg-base-200 shadow-lg text-brand-primary' : 'text-slate-400'}`}
+                    >
+                        <Video size={18}/> Drone Sizzle Reel
+                    </button>
+                    <button 
+                        onClick={() => { setActiveTab('image'); setOutputUrl(null); }}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'image' ? 'bg-white dark:bg-base-200 shadow-lg text-brand-primary' : 'text-slate-400'}`}
+                    >
+                        <ImageIcon size={18}/> Virtual Staging
+                    </button>
+                </div>
+
+                {activeTab === 'image' && (
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-base-300/30 p-2 rounded-2xl">
+                        <Sliders size={14} className="text-slate-400 ml-2" />
+                        <div className="flex gap-1">
+                            {(['1K', '2K', '4K'] as const).map(res => (
+                                <button
+                                    key={res}
+                                    onClick={() => setResolution(res)}
+                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${resolution === res ? 'bg-brand-primary text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    {res}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="space-y-6">
@@ -133,7 +168,7 @@ export const MarketingStudio: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2 text-status-green bg-green-50 dark:bg-green-900/10 p-4 rounded-2xl border border-green-100 dark:border-green-900/30">
                         <CheckCircle size={18}/>
-                        <p className="text-sm font-bold">Inference Complete. Asset ready for distribution.</p>
+                        <p className="text-sm font-bold">Inference Complete. {activeTab === 'image' && resolution !== '1K' ? `Exported at ${resolution} Industrial Fidelity.` : 'Asset ready for distribution.'}</p>
                     </div>
                 </div>
             )}
