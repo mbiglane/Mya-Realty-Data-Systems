@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TITAN | Mya Intelligence Systems</title>
+    <title>TITAN | AI Real Estate Data Intelligence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -17,34 +16,21 @@
               'status-green': '#22c55e',
               'status-yellow': '#eab308',
               'status-red': '#ef4444',
-              'base-100': '#020617',
-              'base-200': '#0f172a',
-              'base-300': '#1e293b',
+              'slate-950': '#020617',
             },
             animation: {
-              'fade-in': 'fadeIn 0.5s ease-in-out',
-              'slide-in-up': 'slideInUp 0.5s ease-in-out',
-              'pulse-glow': 'pulseGlow 2s infinite',
-              'scan': 'scan 2s infinite',
+              'fade-in': 'fadeIn 0.4s ease-out forwards',
+              'pulse-soft': 'pulseSoft 2s infinite',
+              'shimmer': 'shimmer 2s infinite linear',
+              'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
+              'scan': 'scanLine 4s linear infinite',
             },
             keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideInUp: {
-                '0%': { transform: 'translateY(100%)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              },
-              pulseGlow: {
-                '0%, 100%': { opacity: '0.4' },
-                '50%': { opacity: '1' },
-              },
-              scan: {
-                '0%': { transform: 'translateY(0)', opacity: '0' },
-                '50%': { opacity: '1' },
-                '100%': { transform: 'translateY(280px)', opacity: '0' },
-              }
+              fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+              pulseSoft: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.6' } },
+              shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+              heartbeat: { '0%, 100%': { transform: 'scale(1)', opacity: '1' }, '50%': { transform: 'scale(1.2)', opacity: '0.5' } },
+              scanLine: { '0%': { top: '-10%' }, '100%': { top: '110%' } },
             },
           },
         },
@@ -55,46 +41,87 @@
         --color-brand-primary: 45 212 191; 
         --color-brand-secondary: 167 139 250;
       }
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
+      body {
         background-color: #020617;
+        color: #e2e8f0;
+        margin: 0;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        overflow: hidden;
+        height: 100vh;
       }
-      #root {
-        height: 100%;
+      #root { height: 100%; display: flex; flex-direction: column; position: relative; z-index: 10; }
+      .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #2dd4bf; }
+      
+      .industrial-border { border: 1px solid rgba(255, 255, 255, 0.08); }
+      
+      .grid-bg {
+        background-image: linear-gradient(rgba(45, 212, 191, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(45, 212, 191, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
       }
-      ::-webkit-scrollbar {
-        width: 6px;
+
+      .noise-bg {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0.02;
+        pointer-events: none;
       }
-      ::-webkit-scrollbar-track {
-        background: #020617;
+
+      .scan-line {
+        height: 15vh;
+        background: linear-gradient(to bottom, transparent, rgba(45, 212, 191, 0.05), transparent);
+        width: 100%;
+        position: fixed;
+        z-index: 1;
+        pointer-events: none;
       }
-      ::-webkit-scrollbar-thumb {
-        background: #1e293b;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #2dd4bf;
+
+      .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
     </style>
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@19.0.0",
-        "react/": "https://esm.sh/react@19.0.0/",
-        "react-dom": "https://esm.sh/react-dom@19.0.0",
-        "react-dom/": "https://esm.sh/react-dom@19.0.0/",
-        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-        "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
-        "lucide-react": "https://esm.sh/lucide-react@0.473.0?external=react",
-        "@google/genai": "https://esm.sh/@google/genai@0.21.0"
-      }
-    }
+{
+  "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.474.0?external=react",
+    "@google/genai": "https://esm.sh/@google/genai@0.21.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+    <script>
+      // Early Error Catcher
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        console.error('Boot Error:', msg, error);
+        const root = document.getElementById('root');
+        if (root && !root.innerHTML.trim()) {
+          root.innerHTML = `
+            <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#020617; color:#ef4444; font-family:monospace; padding:40px; text-align:center;">
+              <div>
+                <h1 style="font-size:24px; margin-bottom:16px;">HYPERLINK_FAILURE</h1>
+                <p style="color:#64748b; font-size:14px; max-width:400px; margin:0 auto;">${msg}</p>
+                <button onclick="location.reload()" style="margin-top:24px; padding:12px 24px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">RE-SYNC TERMINAL</button>
+              </div>
+            </div>
+          `;
+        }
+        return false;
+      };
     </script>
   </head>
-  <body class="antialiased h-full text-slate-200">
+  <body class="antialiased h-full overflow-hidden">
+    <div class="fixed inset-0 grid-bg z-0"></div>
+    <div class="fixed inset-0 noise-bg z-0"></div>
+    <div class="scan-line animate-scan"></div>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
   </body>

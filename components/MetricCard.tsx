@@ -1,7 +1,6 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ElementType } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import type { AppConfig } from '../types';
 
 interface MetricCardProps {
@@ -12,51 +11,65 @@ interface MetricCardProps {
     config: AppConfig;
 }
 
-export const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, color, config }) => {
-    const data = [
-        { name: 'value', value: value },
-        { name: 'remaining', value: 100 - value },
-    ];
-    
-    // Determine the hex color based on the Tailwind class passed in the `color` prop
-    let chartColor = '#000000';
-    if (color.includes('brand-primary')) chartColor = config.brandPrimary;
-    else if (color.includes('brand-secondary')) chartColor = config.brandSecondary;
-    else if (color.includes('status-green')) chartColor = '#22c55e';
-    else if (color.includes('status-yellow')) chartColor = '#eab308';
-    else if (color.includes('status-red')) chartColor = '#ef4444';
+export const MetricCard: React.FC<MetricCardProps> = React.memo(({ title, value, icon: Icon, color, config }) => {
+    const strokeDasharray = useMemo(() => {
+        const radius = 30;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (value / 100) * circumference;
+        return { circumference, offset };
+    }, [value]);
+
+    let hexColor = '#2dd4bf';
+    if (color.includes('brand-secondary')) hexColor = config.brandSecondary;
+    else if (color.includes('status-green')) hexColor = '#22c55e';
+    else if (color.includes('status-yellow')) hexColor = '#eab308';
+    else if (color.includes('status-red')) hexColor = '#ef4444';
 
     return (
-        <div className="bg-white dark:bg-base-200 p-4 rounded-lg shadow-lg flex items-center space-x-4 transition-transform hover:scale-105">
-            <div className="w-20 h-20 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            dataKey="value"
-                            innerRadius={28}
-                            outerRadius={35}
-                            startAngle={90}
-                            endAngle={450}
-                            stroke="none"
-                        >
-                            <Cell key="value" fill={chartColor} />
-                            <Cell key="remaining" className="pie-secondary-cell" />
-                        </Pie>
-                    </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-bold text-slate-900 dark:text-gray-100">{value}</span>
+        <div className="bg-slate-900/50 p-6 rounded-[2rem] border border-white/5 shadow-xl group hover:border-brand-primary/20 transition-all duration-500">
+            <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-2xl bg-slate-950 industrial-border ${color} group-hover:scale-110 transition-transform`}>
+                    <Icon size={20} />
+                </div>
+                <div className="text-right">
+                    <p className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">{title}</p>
                 </div>
             </div>
-            <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                    <Icon className={`h-5 w-5 ${color}`} />
-                    <h3 className="text-md font-semibold text-slate-600 dark:text-gray-300">{title}</h3>
+            
+            <div className="flex items-end justify-between gap-4">
+                <div className="relative h-16 w-16">
+                    <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 80 80">
+                        <circle
+                            cx="40"
+                            cy="40"
+                            r="30"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="transparent"
+                            className="text-white/5"
+                        />
+                        <circle
+                            cx="40"
+                            cy="40"
+                            r="30"
+                            stroke={hexColor}
+                            strokeWidth="4"
+                            fill="transparent"
+                            strokeDasharray={strokeDasharray.circumference}
+                            strokeDashoffset={strokeDasharray.offset}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-lg font-black text-white">{value}</span>
+                    </div>
+                </div>
+                <div className="flex flex-col items-end">
+                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</span>
+                    <span className="text-[10px] font-black text-white uppercase italic">Optimal_Band</span>
                 </div>
             </div>
         </div>
     );
-};
+});
